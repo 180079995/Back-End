@@ -19,9 +19,9 @@ def homework_entry(user, homework_id=None):
     apply a operation to single homework
     '''
     @Request.json('name', 'course_name', 'markdown', 'start', 'end',
-                  'problem_ids', 'scoreboard_status')
+                  'problem_ids', 'scoreboard_status', 'penalty')
     def add_homework(course_name, name, markdown, start, end, problem_ids,
-                     scoreboard_status):
+                     scoreboard_status, penalty):
         try:
             homework = Homework.add(
                 user=user,
@@ -32,6 +32,7 @@ def homework_entry(user, homework_id=None):
                 problem_ids=problem_ids or [],
                 start=start,
                 end=end,
+                penalty=penalty, 
             )
         except NameError:
             return HTTPError('user must be the teacher or ta of this course',
@@ -41,9 +42,9 @@ def homework_entry(user, homework_id=None):
         return HTTPResponse('Add homework Success')
 
     @Request.json('name', 'markdown', 'start', 'end', 'problem_ids',
-                  'scoreboard_status')
+                  'scoreboard_status', 'penalty')
     def update_homework(name, markdown, start, end, problem_ids,
-                        scoreboard_status):
+                        scoreboard_status,penalty):
         homework = Homework.update(
             user=user,
             homework_id=homework_id,
@@ -53,6 +54,7 @@ def homework_entry(user, homework_id=None):
             end=end,
             problem_ids=problem_ids,
             scoreboard_status=scoreboard_status,
+            penalty=penalty,
         )
         return HTTPResponse('Update homework Success')
 
@@ -78,6 +80,8 @@ def homework_entry(user, homework_id=None):
             'studentStatus':
             homework.student_status
             if user.role < 2 else homework.student_status.get(user.username),
+            'penalty':
+            homework.penalty,
         }
         return HTTPResponse('get homework', data=ret)
 
