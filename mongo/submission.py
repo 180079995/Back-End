@@ -454,10 +454,19 @@ class Submission(MongoBase, engine=engine.Submission):
         User(self.username).add_submission(self)
         # update homework data
         for homework in self.problem.homeworks:
-            # if the homework is overdue, skip it
-            if self.timestamp > homework.duration.end:
-                continue
+            # if the homework is overdue, do the penalty
             stat = homework.student_status[self.username][str(self.problem_id)]
+            if self.timestamp > homework.duration.end:
+                if self.handwritten:
+                    continue
+                if 'rawScore' not in stat:
+                        stat['rawScore'] = stat['score']
+                score = self.score - stat['rawScore']
+                if score >0:
+                    exec(homework.penalty)
+                    stat['score']+=score
+                    stat['rawScore'] = self.score
+                continue
             stat['submissionIds'].append(self.id)
             # handwritten problem will only keep the last submission
             if self.handwritten:
